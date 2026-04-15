@@ -19,8 +19,10 @@
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        h1 { color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 1rem; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 1rem; outline: none; }
         h2 { color: #e67e22; margin-top: 2rem; }
+        
+        /* 規則區塊樣式 */
         .rules-box {
             background: #fff3e0;
             padding: 1rem;
@@ -29,6 +31,8 @@
             border-left: 5px solid #ff9800;
         }
         .rules-box h3 { margin-top: 0; color: #e65100; font-size: 1.1rem; }
+        
+        /* 列表樣式 */
         ul { list-style-type: none; padding-left: 0; }
         li {
             padding: 0.8rem;
@@ -36,6 +40,35 @@
             font-size: 1.2rem;
         }
         li:last-child { border-bottom: none; }
+
+        /* 首頁餐廳清單樣式 */
+        .restaurant-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 1.5rem;
+        }
+        .restaurant-link {
+            display: block;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            background: #fdf2f2;
+            color: #c0392b;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 1.4rem;
+            font-weight: bold;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .restaurant-link:hover, .restaurant-link:focus {
+            background: #c0392b;
+            color: white;
+            border-color: #962d22;
+            outline: none;
+        }
+
+        /* 錯誤訊息樣式 */
         .error {
             color: #c0392b;
             background: #fdf2f2;
@@ -43,77 +76,140 @@
             border-left: 5px solid #c0392b;
             font-weight: bold;
         }
-        .loading { font-style: italic; color: #7f8c8d; }
     </style>
 </head>
 <body>
     <div id="menu-container" role="main">
         <div id="app" aria-live="polite">
-            <p class="loading">正在載入菜單資料...</p>
+            <!-- 內容由 JavaScript 動態填入 -->
         </div>
     </div>
 
     <script>
-        async function fetchMenu() {
+        const database = {
+          "001": {
+            "shopName": "鍋序火鍋",
+            "rules": [
+              "用餐時間限時 90 分鐘",
+              "身高超過 120 公分 (含) 共鍋費 100/人 (可抵單點)",
+              "牛肉、羊肉品項需加價 10 元",
+              "額外加肉需加價 30 元"
+            ],
+            "menus": [
+              {
+                "category": "經典鍋物",
+                "items": ["原味鍋 (170元)", "沙茶鍋、麻辣鍋 (180元)", "鯛魚鍋 (190元，純海鮮不附肉品)", "海鮮鍋 (200元，純海鮮不附肉品)"]
+              },
+              {
+                "category": "特色鍋物",
+                "items": ["沙茶臭臭鍋、麻辣臭臭鍋、韓式泡菜鍋、養身藥膳鍋、田園蕃茄鍋、黃金南瓜鍋 (190元)", "香醇牛奶鍋 (200元)", "起司牛奶鍋 (210元)"]
+              },
+              {
+                "category": "素食鍋物",
+                "items": ["素食蔬菜鍋、素食田園蕃茄鍋、素食養身藥膳鍋 (190元)"]
+              },
+              {
+                "category": "單點 - 火鍋料 (30元，兩樣 50 元)",
+                "items": ["蟹肉棒、鑫鑫腸、魚卵捲、蛋餃、豆皮、生臭豆腐、小貢丸、甜不辣、米血、魚餃、油條、龍蝦沙拉、麻吉燒、凍豆腐、魚板、燕餃、鳥蛋"]
+              },
+              {
+                "category": "單點 - 蔬菜 (35元，兩樣 60 元)",
+                "items": ["高麗菜、金針菇、青江菜、木耳、玉米、南瓜、芋頭、山筒蒿"]
+              },
+              {
+                "category": "單點 - 其他",
+                "items": ["雞蛋 (10元)", "起司 (15元)", "餃子三兄弟 (30元)"]
+              },
+              {
+                "category": "單點 - 海鮮",
+                "items": ["超值海鮮拼盤 (99元)", "鯛魚片、白蝦、蛤蜊、魷魚圈 (65元)"]
+              }
+            ]
+          },
+          "002": {
+            "shopName": "老王牛肉麵",
+            "rules": ["內用低消一碗麵", "酸菜請自取"],
+            "menus": [
+              {
+                "category": "招牌麵食",
+                "items": ["紅燒牛肉麵", "清燉牛肉麵", "半筋半肉麵"]
+              },
+              {
+                "category": "精緻小菜",
+                "items": ["滷蛋", "經典海帶", "五香豆乾"]
+              }
+            ]
+          }
+        };
+
+        function render() {
             const app = document.getElementById('app');
             const params = new URLSearchParams(window.location.search);
             const menuId = params.get('id');
 
+            // --- 情況 A：顯示首頁餐廳清單 ---
             if (!menuId) {
-                app.innerHTML = `<p class="error" role="alert">錯誤：網址未提供菜單 ID。</p>`;
+                let html = `<h1 tabindex="-1">請選擇餐廳</h1><ul class="restaurant-list">`;
+                Object.keys(database).forEach(id => {
+                    html += `
+                        <li>
+                            <a href="?id=${id}" class="restaurant-link" tabindex="0">
+                                ${database[id].shopName}
+                            </a>
+                        </li>`;
+                });
+                html += `</ul>`;
+                app.innerHTML = html;
+                
+                const h1 = app.querySelector('h1');
+                if (h1) h1.focus();
                 return;
             }
 
-            try {
-                const response = await fetch('database.json');
-                if (!response.ok) throw new Error('讀取資料庫失敗');
-                
-                const data = await response.json();
-                const restaurant = data[menuId];
-
-                if (!restaurant) {
-                    app.innerHTML = `<p class="error" role="alert">錯誤：找不到 ID 為 "${menuId}" 的菜單。</p>`;
-                    return;
-                }
-
-                // 支援新舊兩種資料格式
-                const shopName = restaurant.shopName || restaurant.name;
-                const rules = restaurant.rules || [];
-                const menus = restaurant.menus || restaurant.menu || [];
-
-                let content = `<h1 tabindex="-1">${shopName}</h1>`;
-                
-                // 渲染用餐規則
-                if (rules.length > 0) {
-                    content += `<div class="rules-box" role="region" aria-label="用餐規則">`;
-                    content += `<h3>用餐規則</h3><ul>`;
-                    rules.forEach(rule => {
-                        content += `<li>${rule}</li>`;
-                    });
-                    content += `</ul></div>`;
-                }
-
-                // 渲染菜單內容
-                menus.forEach(section => {
-                    content += `<h2>${section.category}</h2>`;
-                    content += '<ul>';
-                    section.items.forEach(item => {
-                        content += `<li>${item}</li>`;
-                    });
-                    content += '</ul>';
-                });
-
-                app.innerHTML = content;
-                
-                // 自動聚焦到第一個標題，讓螢幕閱讀器直接開始朗讀
-                const firstHeading = app.querySelector('h1');
-                if (firstHeading) firstHeading.focus();
-            } catch (err) {
-                app.innerHTML = `<p class="error" role="alert">系統錯誤：無法載入資料庫 (${err.message})</p>`;
+            // --- 情況 B：顯示特定餐廳菜單 ---
+            const restaurant = database[menuId];
+            if (!restaurant) {
+                app.innerHTML = `
+                    <p class="error" role="alert">錯誤：找不到 ID 為 "${menuId}" 的菜單。</p>
+                    <a href="index.html" class="restaurant-link" style="margin-top:1rem">回首頁</a>
+                `;
+                return;
             }
+
+            let content = `<h1 tabindex="-1">${restaurant.shopName}</h1>`;
+            
+            // 麵包屑/回首頁連結 (無障礙考量)
+            content += `<a href="index.html" style="display:inline-block; margin-bottom:1rem; color:#7f8c8d;">← 返回餐廳列表</a>`;
+
+            // 用餐規則
+            if (restaurant.rules && restaurant.rules.length > 0) {
+                content += `<div class="rules-box" role="region" aria-label="用餐規則">`;
+                content += `<h3 tabindex="0">用餐規則</h3><ul>`;
+                restaurant.rules.forEach(rule => {
+                    content += `<li tabindex="0">${rule}</li>`;
+                });
+                content += `</ul></div>`;
+            }
+
+            // 菜單品項
+            restaurant.menus.forEach(section => {
+                content += `<h2 tabindex="0">${section.category}</h2>`;
+                content += '<ul>';
+                section.items.forEach(item => {
+                    content += `<li tabindex="0">${item}</li>`;
+                });
+                content += '</ul>';
+            });
+
+            app.innerHTML = content;
+            
+            // 自動聚焦到店名，讓螢幕閱讀器啟動
+            const h1 = app.querySelector('h1');
+            if (h1) h1.focus();
         }
 
-        fetchMenu();
+        // 啟動渲染
+        render();
     </script>
 </body>
 </html>
