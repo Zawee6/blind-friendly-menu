@@ -81,24 +81,24 @@
                 const rules = restaurant.rules || [];
                 const menus = restaurant.menus || restaurant.menu || [];
 
-                let content = `<h1 tabindex="0">${shopName}</h1>`;
+                let content = `<h1>${shopName}</h1>`;
                 
                 // 渲染用餐規則
                 if (rules.length > 0) {
                     content += `<div class="rules-box" role="region" aria-label="用餐規則">`;
-                    content += `<h3 tabindex="0">用餐規則</h3><ul>`;
+                    content += `<h3>用餐規則</h3><ul>`;
                     rules.forEach(rule => {
-                        content += `<li tabindex="0">${rule}</li>`;
+                        content += `<li>${rule}</li>`;
                     });
                     content += `</ul></div>`;
                 }
 
                 // 渲染菜單內容
                 menus.forEach(section => {
-                    content += `<h2 tabindex="0">${section.category}</h2>`;
+                    content += `<h2>${section.category}</h2>`;
                     content += '<ul>';
                     section.items.forEach(item => {
-                        content += `<li tabindex="0">${item}</li>`;
+                        content += `<li>${item}</li>`;
                     });
                     content += '</ul>';
                 });
