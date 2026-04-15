@@ -81,7 +81,7 @@
                 const rules = restaurant.rules || [];
                 const menus = restaurant.menus || restaurant.menu || [];
 
-                let content = `<h1>${shopName}</h1>`;
+                let content = `<h1 tabindex="-1">${shopName}</h1>`;
                 
                 // 渲染用餐規則
                 if (rules.length > 0) {
