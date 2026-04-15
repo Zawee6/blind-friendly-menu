@@ -104,6 +104,10 @@
                 });
 
                 app.innerHTML = content;
+                
+                // 自動聚焦到第一個標題，讓螢幕閱讀器直接開始朗讀
+                const firstHeading = app.querySelector('h1');
+                if (firstHeading) firstHeading.focus();
             } catch (err) {
                 app.innerHTML = `<p class="error" role="alert">系統錯誤：無法載入資料庫 (${err.message})</p>`;
             }
