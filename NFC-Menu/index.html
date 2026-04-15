@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>視障友善菜單</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            padding: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+            background-color: #f9f9f9;
+        }
+        #menu-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 1rem; }
+        h2 { color: #e67e22; margin-top: 2rem; }
+        ul { list-style-type: none; padding-left: 0; }
+        li {
+            padding: 0.8rem;
+            border-bottom: 1px solid #eee;
+            font-size: 1.2rem;
+        }
+        li:last-child { border-bottom: none; }
+        .error {
+            color: #c0392b;
+            background: #fdf2f2;
+            padding: 1rem;
+            border-left: 5px solid #c0392b;
+            font-weight: bold;
+        }
+        .loading { font-style: italic; color: #7f8c8d; }
+    </style>
+</head>
+<body>
+    <div id="menu-container" role="main">
+        <div id="app" aria-live="polite">
+            <p class="loading">正在載入菜單資料...</p>
+        </div>
+    </div>
+
+    <script>
+        async function fetchMenu() {
+            const app = document.getElementById('app');
+            const params = new URLSearchParams(window.location.search);
+            const menuId = params.get('id');
+
+            if (!menuId) {
+                app.innerHTML = `
+                    <p class="error" role="alert">
+                        錯誤：網址未提供菜單 ID。<br>
+                        範例：index.html?id=001
+                    </p>`;
+                return;
+            }
+
+            try {
+                const response = await fetch('database.json');
+                if (!response.ok) throw new Error('讀取資料庫失敗');
+                
+                const data = await response.json();
+                const restaurant = data[menuId];
+
+                if (!restaurant) {
+                    app.innerHTML = `<p class="error" role="alert">錯誤：找不到 ID 為 "${menuId}" 的菜單。</p>`;
+                    return;
+                }
+
+                // 建立 HTML 結構，符合無障礙語音導覽
+                let content = `<h1 tabindex="0">${restaurant.name}</h1>`;
+                
+                restaurant.menu.forEach(section => {
+                    content += `<h2 tabindex="0">${section.category}</h2>`;
+                    content += '<ul>';
+                    section.items.forEach(item => {
+                        content += `<li tabindex="0">${item}</li>`;
+                    });
+                    content += '</ul>';
+                });
+
+                app.innerHTML = content;
+            } catch (err) {
+                app.innerHTML = `<p class="error" role="alert">系統錯誤：無法載入資料庫 (${err.message})</p>`;
+            }
+        }
+
+        fetchMenu();
+    </script>
+</body>
+</html>
