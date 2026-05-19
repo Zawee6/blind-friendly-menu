@@ -76,71 +76,87 @@
             border-left: 5px solid #c0392b;
             font-weight: bold;
         }
+
+        /* 分類導覽樣式 */
+        .nav-box {
+            background: #e3f2fd;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+            border-left: 5px solid #2196f3;
+        }
+        .nav-box h3 { margin-top: 0; color: #0d47a1; font-size: 1.1rem; }
+        .category-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .category-link {
+            flex: 1 1 calc(50% - 10px);
+            padding: 1rem;
+            background: white;
+            color: #1976d2;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: center;
+            border: 2px solid #bbdefb;
+            box-sizing: border-box;
+        }
+        .category-link:hover, .category-link:focus {
+            background: #2196f3;
+            color: white;
+            border-color: #0d47a1;
+            outline: none;
+        }
+        .back-to-categories {
+            display: inline-block;
+            margin-top: 0.5rem;
+            margin-bottom: 2rem;
+            padding: 0.8rem 1.2rem;
+            background-color: #f8f9fa;
+            color: #1976d2;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: 2px solid #e3f2fd;
+            transition: all 0.2s;
+        }
+        .back-to-categories:hover, .back-to-categories:focus {
+            background-color: #2196f3;
+            color: white;
+            border-color: #0d47a1;
+            outline: none;
+        }
+        @media (max-width: 480px) {
+            .category-link { flex: 1 1 100%; }
+        }
     </style>
 </head>
 <body>
     <div id="menu-container" role="main">
         <div id="app" aria-live="polite">
-            <!-- 內容由 JavaScript 動態填入 -->
+            <p>載入中...</p>
         </div>
     </div>
 
     <script>
-        const database = {
-          "001": {
-            "shopName": "鍋序火鍋",
-            "rules": [
-              "用餐時間限時 90 分鐘",
-              "身高超過 120 公分 (含) 共鍋費 100/人 (可抵單點)",
-              "牛肉、羊肉品項需加價 10 元",
-              "額外加肉需加價 30 元"
-            ],
-            "menus": [
-              {
-                "category": "經典鍋物",
-                "items": ["原味鍋 (170元)", "沙茶鍋、麻辣鍋 (180元)", "鯛魚鍋 (190元，純海鮮不附肉品)", "海鮮鍋 (200元，純海鮮不附肉品)"]
-              },
-              {
-                "category": "特色鍋物",
-                "items": ["沙茶臭臭鍋、麻辣臭臭鍋、韓式泡菜鍋、養身藥膳鍋、田園蕃茄鍋、黃金南瓜鍋 (190元)", "香醇牛奶鍋 (200元)", "起司牛奶鍋 (210元)"]
-              },
-              {
-                "category": "素食鍋物",
-                "items": ["素食蔬菜鍋、素食田園蕃茄鍋、素食養身藥膳鍋 (190元)"]
-              },
-              {
-                "category": "單點 - 火鍋料 (30元，兩樣 50 元)",
-                "items": ["蟹肉棒、鑫鑫腸、魚卵捲、蛋餃、豆皮、生臭豆腐、小貢丸、甜不辣、米血、魚餃、油條、龍蝦沙拉、麻吉燒、凍豆腐、魚板、燕餃、鳥蛋"]
-              },
-              {
-                "category": "單點 - 蔬菜 (35元，兩樣 60 元)",
-                "items": ["高麗菜、金針菇、青江菜、木耳、玉米、南瓜、芋頭、山筒蒿"]
-              },
-              {
-                "category": "單點 - 其他",
-                "items": ["雞蛋 (10元)", "起司 (15元)", "餃子三兄弟 (30元)"]
-              },
-              {
-                "category": "單點 - 海鮮",
-                "items": ["超值海鮮拼盤 (99元)", "鯛魚片、白蝦、蛤蜊、魷魚圈 (65元)"]
-              }
-            ]
-          },
-          "002": {
-            "shopName": "老王牛肉麵",
-            "rules": ["內用低消一碗麵", "酸菜請自取"],
-            "menus": [
-              {
-                "category": "招牌麵食",
-                "items": ["紅燒牛肉麵", "清燉牛肉麵", "半筋半肉麵"]
-              },
-              {
-                "category": "精緻小菜",
-                "items": ["滷蛋", "經典海帶", "五香豆乾"]
-              }
-            ]
-          }
-        };
+        let database = {};
+
+        async function loadDatabase() {
+            const app = document.getElementById('app');
+            try {
+                const response = await fetch('database.json');
+                if (!response.ok) throw new Error('無法載入資料庫 (database.json)');
+                database = await response.json();
+                render();
+            } catch (error) {
+                console.error('Error:', error);
+                app.innerHTML = `<div class="error"><h1>載入失敗</h1><p>${error.message}</p><p>請確保您是透過伺服器 (如 Live Server) 開啟網頁，而非直接開啟檔案。</p></div>`;
+            }
+        }
 
         function render() {
             const app = document.getElementById('app');
@@ -150,7 +166,7 @@
             // --- 情況 A：顯示首頁餐廳清單 ---
             if (!menuId) {
                 let html = `<h1 tabindex="-1">請選擇餐廳</h1><ul class="restaurant-list">`;
-                Object.keys(database).forEach(id => {
+                Object.keys(database).sort().forEach(id => {
                     html += `
                         <li>
                             <a href="?id=${id}" class="restaurant-link" tabindex="0">
@@ -170,16 +186,18 @@
             const restaurant = database[menuId];
             if (!restaurant) {
                 app.innerHTML = `
-                    <p class="error" role="alert">錯誤：找不到 ID 為 "${menuId}" 的菜單。</p>
-                    <a href="index.html" class="restaurant-link" style="margin-top:1rem">回首頁</a>
+                    <div class="error">
+                        <p role="alert">錯誤：找不到 ID 為 "${menuId}" 的菜單。</p>
+                        <a href="index.html" class="restaurant-link" style="margin-top:1rem">回首頁</a>
+                    </div>
                 `;
                 return;
             }
 
             let content = `<h1 tabindex="-1">${restaurant.shopName}</h1>`;
             
-            // 麵包屑/回首頁連結 (無障礙考量)
-            content += `<a href="index.html" style="display:inline-block; margin-bottom:1rem; color:#7f8c8d;">← 返回餐廳列表</a>`;
+            // 返回按鈕
+            content += `<a href="index.html" style="display:inline-block; margin-bottom:1rem; color:#7f8c8d; text-decoration:none;">← 返回餐廳列表</a>`;
 
             // 用餐規則
             if (restaurant.rules && restaurant.rules.length > 0) {
@@ -191,14 +209,27 @@
                 content += `</ul></div>`;
             }
 
+            // 快速分類導覽
+            if (restaurant.menus && restaurant.menus.length > 0) {
+                content += `<div class="nav-box" role="navigation" aria-label="菜單快速導覽">`;
+                content += `<h3 id="category-list-header" tabindex="0" style="outline: none;">菜單分類 (點擊跳轉)</h3>`;
+                content += `<div class="category-nav">`;
+                restaurant.menus.forEach((section, index) => {
+                    content += `<a href="#category-${index}" class="category-link">${section.category}</a>`;
+                });
+                content += `</div></div>`;
+            }
+
             // 菜單品項
-            restaurant.menus.forEach(section => {
-                content += `<h2 tabindex="0">${section.category}</h2>`;
+            restaurant.menus.forEach((section, index) => {
+                content += `<h2 id="category-${index}" tabindex="0" style="outline: none;">${section.category}</h2>`;
                 content += '<ul>';
                 section.items.forEach(item => {
                     content += `<li tabindex="0">${item}</li>`;
                 });
                 content += '</ul>';
+                // 每個大項結束後回到分類的按鈕
+                content += `<a href="#category-list-header" class="back-to-categories">↑ 回到大項分類</a>`;
             });
 
             app.innerHTML = content;
@@ -208,8 +239,8 @@
             if (h1) h1.focus();
         }
 
-        // 啟動渲染
-        render();
+        // 啟動載入
+        loadDatabase();
     </script>
 </body>
 </html>
