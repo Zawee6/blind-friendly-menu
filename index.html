@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>視障友善菜單</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            padding: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+            background-color: #f9f9f9;
+        }
+        #menu-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 1rem; outline: none; }
+        h2 { color: #e67e22; margin-top: 2rem; }
+        
+        /* 規則區塊樣式 */
+        .rules-box {
+            background: #fff3e0;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+            border-left: 5px solid #ff9800;
+        }
+        .rules-box h3 { margin-top: 0; color: #e65100; font-size: 1.1rem; }
+        
+        /* 列表樣式 */
+        ul { list-style-type: none; padding-left: 0; }
+        li {
+            padding: 0.8rem;
+            border-bottom: 1px solid #eee;
+            font-size: 1.2rem;
+        }
+        li:last-child { border-bottom: none; }
+
+        /* 首頁餐廳清單樣式 */
+        .restaurant-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 1.5rem;
+        }
+        .restaurant-link {
+            display: block;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            background: #fdf2f2;
+            color: #c0392b;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 1.4rem;
+            font-weight: bold;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .restaurant-link:hover, .restaurant-link:focus {
+            background: #c0392b;
+            color: white;
+            border-color: #962d22;
+            outline: none;
+        }
+
+        /* 錯誤訊息樣式 */
+        .error {
+            color: #c0392b;
+            background: #fdf2f2;
+            padding: 1rem;
+            border-left: 5px solid #c0392b;
+            font-weight: bold;
+        }
+
+        /* 分類導覽樣式 */
+        .nav-box {
+            background: #e3f2fd;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+            border-left: 5px solid #2196f3;
+        }
+        .nav-box h3 { margin-top: 0; color: #0d47a1; font-size: 1.1rem; }
+        .category-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .category-link {
+            flex: 1 1 calc(50% - 10px);
+            padding: 1rem;
+            background: white;
+            color: #1976d2;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: center;
+            border: 2px solid #bbdefb;
+            box-sizing: border-box;
+        }
+        .category-link:hover, .category-link:focus {
+            background: #2196f3;
+            color: white;
+            border-color: #0d47a1;
+            outline: none;
+        }
+        .back-to-categories {
+            display: inline-block;
+            margin-top: 0.5rem;
+            margin-bottom: 2rem;
+            padding: 0.8rem 1.2rem;
+            background-color: #f8f9fa;
+            color: #1976d2;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: 2px solid #e3f2fd;
+            transition: all 0.2s;
+        }
+        .back-to-categories:hover, .back-to-categories:focus {
+            background-color: #2196f3;
+            color: white;
+            border-color: #0d47a1;
+            outline: none;
+        }
+        @media (max-width: 480px) {
+            .category-link { flex: 1 1 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div id="menu-container" role="main">
+        <div id="app" aria-live="polite">
+            <p>載入中...</p>
+        </div>
+    </div>
+
+    <script>
+        let database = {};
+
+        async function loadDatabase() {
+            const app = document.getElementById('app');
+            try {
+                const response = await fetch('database.json');
+                if (!response.ok) throw new Error('無法載入資料庫 (database.json)');
+                database = await response.json();
+                render();
+            } catch (error) {
+                console.error('Error:', error);
+                app.innerHTML = `<div class="error"><h1>載入失敗</h1><p>${error.message}</p><p>請確保您是透過伺服器 (如 Live Server) 開啟網頁，而非直接開啟檔案。</p></div>`;
+            }
+        }
+
+        function render() {
+            const app = document.getElementById('app');
+            const params = new URLSearchParams(window.location.search);
+            const menuId = params.get('id');
+
+            // --- 情況 A：顯示首頁餐廳清單 ---
+            if (!menuId) {
+                let html = `<h1 tabindex="-1">請選擇餐廳</h1><ul class="restaurant-list">`;
+                Object.keys(database).sort().forEach(id => {
+                    html += `
+                        <li>
+                            <a href="?id=${id}" class="restaurant-link" tabindex="0">
+                                ${database[id].shopName}
+                            </a>
+                        </li>`;
+                });
+                html += `</ul>`;
+                app.innerHTML = html;
+                
+                const h1 = app.querySelector('h1');
+                if (h1) h1.focus();
+                return;
+            }
+
+            // --- 情況 B：顯示特定餐廳菜單 ---
+            const restaurant = database[menuId];
+            if (!restaurant) {
+                app.innerHTML = `
+                    <div class="error">
+                        <p role="alert">錯誤：找不到 ID 為 "${menuId}" 的菜單。</p>
+                        <a href="index.html" class="restaurant-link" style="margin-top:1rem">回首頁</a>
+                    </div>
+                `;
+                return;
+            }
+
+            let content = `<h1 tabindex="-1">${restaurant.shopName}</h1>`;
+            
+            // 返回按鈕
+            content += `<a href="index.html" style="display:inline-block; margin-bottom:1rem; color:#7f8c8d; text-decoration:none;">← 返回餐廳列表</a>`;
+
+            // 用餐規則
+            if (restaurant.rules && restaurant.rules.length > 0) {
+                content += `<div class="rules-box" role="region" aria-label="用餐規則">`;
+                content += `<h3 tabindex="0">用餐規則</h3><ul>`;
+                restaurant.rules.forEach(rule => {
+                    content += `<li tabindex="0">${rule}</li>`;
+                });
+                content += `</ul></div>`;
+            }
+
+            // 快速分類導覽
+            if (restaurant.menus && restaurant.menus.length > 0) {
+                content += `<div class="nav-box" role="navigation" aria-label="菜單快速導覽">`;
+                content += `<h3 id="category-list-header" tabindex="0" style="outline: none;">菜單分類 (點擊跳轉)</h3>`;
+                content += `<div class="category-nav">`;
+                restaurant.menus.forEach((section, index) => {
+                    content += `<a href="#category-${index}" class="category-link">${section.category}</a>`;
+                });
+                content += `</div></div>`;
+            }
+
+            // 菜單品項
+            restaurant.menus.forEach((section, index) => {
+                content += `<h2 id="category-${index}" tabindex="0" style="outline: none;">${section.category}</h2>`;
+                content += '<ul>';
+                section.items.forEach(item => {
+                    content += `<li tabindex="0">${item}</li>`;
+                });
+                content += '</ul>';
+                // 每個大項結束後回到分類的按鈕
+                content += `<a href="#category-list-header" class="back-to-categories">↑ 回到大項分類</a>`;
+            });
+
+            app.innerHTML = content;
+            
+            // 自動聚焦到店名，讓螢幕閱讀器啟動
+            const h1 = app.querySelector('h1');
+            if (h1) h1.focus();
+        }
+
+        // 啟動載入
+        loadDatabase();
+    </script>
+</body>
+</html>
