@@ -5,24 +5,60 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>視障友善菜單</title>
     <style>
+        /* 基礎變數設定 */
+        :root {
+            --bg-body: #f9f9f9;
+            --bg-container: white;
+            --text-main: #2c3e50;
+            --text-sub: #34495e;
+            --border-color: #eee;
+            --accent-orange: #e67e22;
+            --accent-blue: #2196f3;
+            --accent-green: #4caf50;
+            --accent-red: #c0392b;
+            --focus-ring: #2980b9;
+        }
+
+        /* 深色模式 / 高對比配色 */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-body: #121212;
+                --bg-container: #1e1e1e;
+                --text-main: #e0e0e0;
+                --text-sub: #b0bec5;
+                --border-color: #333;
+                --accent-orange: #ffa726;
+                --accent-blue: #64b5f6;
+                --accent-green: #81c784;
+                --accent-red: #ff8a65;
+                --focus-ring: #4fc3f7;
+            }
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             padding: 2rem;
             max-width: 800px;
             margin: 0 auto;
             line-height: 1.6;
-            background-color: #f9f9f9;
+            background-color: var(--bg-body);
+            color: var(--text-main);
         }
         #menu-container {
-            background: white;
+            background: var(--bg-container);
             padding: 2rem;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        h1 { color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 1rem; outline: none; }
-        h2 { color: #e67e22; margin-top: 2rem; }
+        h1 { color: var(--text-main); border-bottom: 2px solid var(--border-color); padding-bottom: 1rem; }
+        h2 { color: var(--accent-orange); margin-top: 2rem; border-left: 4px solid var(--accent-orange); padding-left: 10px; }
+        h3 { color: var(--text-sub); margin-top: 1.5rem; }
         
-        /* 規則區塊樣式 */
+        :focus-visible {
+            outline: 3px solid var(--focus-ring);
+            outline-offset: 4px;
+        }
+
         .rules-box {
             background: #fff3e0;
             padding: 1rem;
@@ -30,18 +66,20 @@
             margin: 1rem 0;
             border-left: 5px solid #ff9800;
         }
-        .rules-box h3 { margin-top: 0; color: #e65100; font-size: 1.1rem; }
+        @media (prefers-color-scheme: dark) {
+            .rules-box { background: #2e261d; }
+        }
+        .rules-box h2 { margin-top: 0; color: #e65100; font-size: 1.3rem; border: none; padding: 0; }
+        @media (prefers-color-scheme: dark) { .rules-box h2 { color: #ffb74d; } }
         
-        /* 列表樣式 */
         ul { list-style-type: none; padding-left: 0; }
         li {
             padding: 0.8rem;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--border-color);
             font-size: 1.2rem;
         }
         li:last-child { border-bottom: none; }
 
-        /* 首頁餐廳清單樣式 */
         .restaurant-list {
             list-style: none;
             padding: 0;
@@ -52,7 +90,7 @@
             padding: 1.5rem;
             margin-bottom: 1rem;
             background: #fdf2f2;
-            color: #c0392b;
+            color: var(--accent-red);
             text-decoration: none;
             border-radius: 8px;
             font-size: 1.4rem;
@@ -61,31 +99,36 @@
             border: 2px solid transparent;
             transition: all 0.2s;
         }
+        @media (prefers-color-scheme: dark) {
+            .restaurant-link { background: #3e2723; color: #ffab91; }
+        }
         .restaurant-link:hover, .restaurant-link:focus {
-            background: #c0392b;
+            background: var(--accent-red);
             color: white;
             border-color: #962d22;
-            outline: none;
         }
 
-        /* 錯誤訊息樣式 */
         .error {
-            color: #c0392b;
+            color: var(--accent-red);
             background: #fdf2f2;
             padding: 1rem;
-            border-left: 5px solid #c0392b;
+            border-left: 5px solid var(--accent-red);
             font-weight: bold;
         }
 
-        /* 分類導覽樣式 */
         .nav-box {
             background: #e3f2fd;
             padding: 1rem;
             border-radius: 4px;
             margin: 1rem 0;
-            border-left: 5px solid #2196f3;
+            border-left: 5px solid var(--accent-blue);
         }
-        .nav-box h3 { margin-top: 0; color: #0d47a1; font-size: 1.1rem; }
+        @media (prefers-color-scheme: dark) {
+            .nav-box { background: #0d1b2a; }
+        }
+        .nav-box h2 { margin-top: 0; color: #0d47a1; font-size: 1.3rem; border: none; padding: 0; }
+        @media (prefers-color-scheme: dark) { .nav-box h2 { color: #90caf9; } }
+
         .category-nav {
             display: flex;
             flex-wrap: wrap;
@@ -94,44 +137,94 @@
         .category-link {
             flex: 1 1 calc(50% - 10px);
             padding: 1rem;
-            background: white;
-            color: #1976d2;
+            background: var(--bg-container);
+            color: var(--accent-blue);
             text-decoration: none;
             border-radius: 8px;
             font-size: 1.2rem;
             font-weight: bold;
             text-align: center;
-            border: 2px solid #bbdefb;
+            border: 2px solid var(--accent-blue);
             box-sizing: border-box;
         }
         .category-link:hover, .category-link:focus {
-            background: #2196f3;
+            background: var(--accent-blue);
             color: white;
-            border-color: #0d47a1;
-            outline: none;
         }
         .back-to-categories {
             display: inline-block;
             margin-top: 0.5rem;
             margin-bottom: 2rem;
             padding: 0.8rem 1.2rem;
-            background-color: #f8f9fa;
-            color: #1976d2;
+            background-color: var(--bg-body);
+            color: var(--accent-blue);
             text-decoration: none;
             border-radius: 8px;
             font-size: 1.1rem;
             font-weight: bold;
-            border: 2px solid #e3f2fd;
+            border: 2px solid var(--border-color);
             transition: all 0.2s;
         }
         .back-to-categories:hover, .back-to-categories:focus {
-            background-color: #2196f3;
+            background-color: var(--accent-blue);
             color: white;
-            border-color: #0d47a1;
-            outline: none;
+        }
+        .main-nav-box {
+            background: #f1f8e9;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+            border-left: 5px solid var(--accent-green);
+        }
+        @media (prefers-color-scheme: dark) {
+            .main-nav-box { background: #1b3022; }
+        }
+        .main-nav-box h2 { margin-top: 0; color: #1b5e20; font-size: 1.3rem; border: none; padding: 0; }
+        @media (prefers-color-scheme: dark) { .main-nav-box h2 { color: #a5d6a7; } }
+
+        .main-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        .main-nav-link {
+            flex: 1;
+            padding: 1.2rem;
+            background: var(--bg-container);
+            color: var(--accent-green);
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            text-align: center;
+            border: 2px solid var(--accent-green);
+            box-sizing: border-box;
+        }
+        .main-nav-link:hover, .main-nav-link:focus {
+            background: var(--accent-green);
+            color: white;
+        }
+        .back-to-top {
+            display: inline-block;
+            margin-top: 1rem;
+            margin-bottom: 2rem;
+            padding: 0.8rem 1.2rem;
+            background-color: var(--bg-body);
+            color: var(--text-sub);
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: 2px solid var(--border-color);
+            transition: all 0.2s;
+        }
+        .back-to-top:hover, .back-to-top:focus {
+            background-color: #607d8b;
+            color: white;
         }
         @media (max-width: 480px) {
             .category-link { flex: 1 1 100%; }
+            .main-nav { flex-direction: column; }
         }
     </style>
 </head>
@@ -154,8 +247,17 @@
                 render();
             } catch (error) {
                 console.error('Error:', error);
-                app.innerHTML = `<div class="error"><h1>載入失敗</h1><p>${error.message}</p><p>請確保您是透過伺服器 (如 Live Server) 開啟網頁，而非直接開啟檔案。</p></div>`;
+                app.innerHTML = `<div class="error"><h1>載入失敗</h1><p>${error.message}</p></div>`;
             }
+        }
+
+        // 優化價格朗讀語意
+        function formatAccessibilityText(text) {
+            // 處理如 "(170元)" 或 "170元" 的格式
+            // 將其轉為帶有 aria-label 的標籤
+            return text.replace(/(\d+)\s*元/g, (match, price) => {
+                return `<span aria-label="價格 ${price} 元">${match}</span>`;
+            });
         }
 
         function render() {
@@ -163,83 +265,71 @@
             const params = new URLSearchParams(window.location.search);
             const menuId = params.get('id');
 
-            // --- 情況 A：顯示首頁餐廳清單 ---
             if (!menuId) {
-                let html = `<h1 tabindex="-1">請選擇餐廳</h1><ul class="restaurant-list">`;
+                let html = `<h1 id="top" tabindex="-1">請選擇餐廳</h1><ul class="restaurant-list">`;
                 Object.keys(database).sort().forEach(id => {
-                    html += `
-                        <li>
-                            <a href="?id=${id}" class="restaurant-link" tabindex="0">
-                                ${database[id].shopName}
-                            </a>
-                        </li>`;
+                    html += `<li><a href="?id=${id}" class="restaurant-link">${database[id].shopName}</a></li>`;
                 });
                 html += `</ul>`;
                 app.innerHTML = html;
-                
                 const h1 = app.querySelector('h1');
                 if (h1) h1.focus();
                 return;
             }
 
-            // --- 情況 B：顯示特定餐廳菜單 ---
             const restaurant = database[menuId];
             if (!restaurant) {
-                app.innerHTML = `
-                    <div class="error">
-                        <p role="alert">錯誤：找不到 ID 為 "${menuId}" 的菜單。</p>
-                        <a href="index.html" class="restaurant-link" style="margin-top:1rem">回首頁</a>
-                    </div>
-                `;
+                app.innerHTML = `<div class="error" role="alert"><p>找不到菜單</p><a href="index.html" class="restaurant-link">回首頁</a></div>`;
                 return;
             }
 
-            let content = `<h1 tabindex="-1">${restaurant.shopName}</h1>`;
-            
-            // 返回按鈕
-            content += `<a href="index.html" style="display:inline-block; margin-bottom:1rem; color:#7f8c8d; text-decoration:none;">← 返回餐廳列表</a>`;
+            let content = `<h1 id="top" tabindex="-1">${restaurant.shopName}</h1>`;
+            content += `<a href="index.html" style="display:inline-block; margin-bottom:1rem; color:var(--text-sub); text-decoration:none;">← 返回餐廳列表</a>`;
 
-            // 用餐規則
+            content += `<section class="main-nav-box" aria-labelledby="jump-nav-title">`;
+            content += `<h2 id="jump-nav-title">快速跳轉</h2>`;
+            content += `<nav class="main-nav">`;
+            content += `<a href="#rules-section" class="main-nav-link">前往 用餐規則</a>`;
+            content += `<a href="#menu-section" class="main-nav-link">前往 菜單內容</a>`;
+            content += `</nav></section>`;
+
             if (restaurant.rules && restaurant.rules.length > 0) {
-                content += `<div class="rules-box" role="region" aria-label="用餐規則">`;
-                content += `<h3 tabindex="0">用餐規則</h3><ul>`;
+                content += `<section id="rules-section" class="rules-box" tabindex="-1" aria-labelledby="rules-title">`;
+                content += `<h2 id="rules-title">用餐規則</h2><ul>`;
                 restaurant.rules.forEach(rule => {
-                    content += `<li tabindex="0">${rule}</li>`;
+                    content += `<li>${formatAccessibilityText(rule)}</li>`;
                 });
-                content += `</ul></div>`;
+                content += `</ul><a href="#top" class="back-to-top">↑ 回到頂部</a></section>`;
             }
 
-            // 快速分類導覽
+            content += `<div id="menu-section" tabindex="-1">`;
+
             if (restaurant.menus && restaurant.menus.length > 0) {
-                content += `<div class="nav-box" role="navigation" aria-label="菜單快速導覽">`;
-                content += `<h3 id="category-list-header" tabindex="0" style="outline: none;">菜單分類 (點擊跳轉)</h3>`;
+                content += `<nav class="nav-box" aria-labelledby="category-nav-title">`;
+                content += `<h2 id="category-nav-title">菜單分類 (點擊跳轉)</h2>`;
                 content += `<div class="category-nav">`;
                 restaurant.menus.forEach((section, index) => {
                     content += `<a href="#category-${index}" class="category-link">${section.category}</a>`;
                 });
-                content += `</div></div>`;
+                content += `</div><a href="#top" class="back-to-top" style="margin-bottom:0;">↑ 回到頂部</a></nav>`;
             }
 
-            // 菜單品項
             restaurant.menus.forEach((section, index) => {
-                content += `<h2 id="category-${index}" tabindex="0" style="outline: none;">${section.category}</h2>`;
-                content += '<ul>';
+                content += `<section id="category-${index}" tabindex="-1" aria-labelledby="cat-h-${index}">`;
+                content += `<h3 id="cat-h-${index}">${section.category}</h3><ul>`;
                 section.items.forEach(item => {
-                    content += `<li tabindex="0">${item}</li>`;
+                    content += `<li>${formatAccessibilityText(item)}</li>`;
                 });
-                content += '</ul>';
-                // 每個大項結束後回到分類的按鈕
-                content += `<a href="#category-list-header" class="back-to-categories">↑ 回到大項分類</a>`;
+                content += `</ul><a href="#category-nav-title" class="back-to-categories">↑ 回到分類列表</a></section>`;
             });
 
+            content += `<div><a href="#top" class="back-to-top">↑ 回到頂部</a></div></div>`;
+
             app.innerHTML = content;
-            
-            // 自動聚焦到店名，讓螢幕閱讀器啟動
             const h1 = app.querySelector('h1');
             if (h1) h1.focus();
         }
 
-        // 啟動載入
         loadDatabase();
     </script>
 </body>
