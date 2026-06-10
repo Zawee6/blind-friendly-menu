@@ -1159,11 +1159,6 @@
   "014": {
     "shopName": "康乃爾",
     "rules": [],
-    "menus": [
-      {
-        "category": "預設分類",
-        "items": []
-      }
-    ]
+    "menus": []
   }
 }
