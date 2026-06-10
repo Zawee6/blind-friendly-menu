@@ -241,7 +241,8 @@
         async function loadDatabase() {
             const app = document.getElementById('app');
             try {
-                const response = await fetch('database.json');
+                // 加入 ?t=時間戳記 避免瀏覽器抓到舊的快取資料
+                const response = await fetch('database.json?t=' + Date.now());
                 if (!response.ok) throw new Error('無法載入資料庫 (database.json)');
                 database = await response.json();
                 render();
