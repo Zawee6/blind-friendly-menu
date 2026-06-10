@@ -266,12 +266,9 @@
 
             try {
                 await fetchDatabase();
-                
-                // 生成下一個代號
                 const ids = Object.keys(database).map(id => parseInt(id)).filter(id => !isNaN(id));
                 const nextId = String((Math.max(...ids, 0) + 1)).padStart(3, '0');
                 
-                // 建立基礎資料
                 database[nextId] = {
                     shopName: name,
                     rules: [],
@@ -279,23 +276,19 @@
                 };
                 
                 currentId = nextId;
-                
-                // 注意：註冊新店家必須要有 GitHub Token 才能將新資料寫回檔案
                 const token = localStorage.getItem('gh-token');
                 if (!token) {
-                    alert(`代號生成成功：${nextId}\n\n但您尚未設定 GitHub 權限，請先登入現有店家進行設定，或請管理員幫您處理。`);
-                    showLogin();
-                    document.getElementById('login-id').value = nextId;
+                    alert(`代號生成成功：${nextId}\n\n但您尚未設定 GitHub 權限，請先點擊下方的 GitHub 設定進行填寫，再嘗試儲存。`);
+                    showApp();
+                    toggleSettings();
                     return;
                 }
 
-                // 直接嘗試儲存到 GitHub 並登入
                 alert(`即將為您建立代號：${nextId}\n店名：${name}\n\n按下確定後將嘗試同步到 GitHub...`);
-                await saveToGitHub(true); // 傳入 true 表示這是註冊後的首次自動儲存
+                await saveToGitHub(true);
                 showApp();
 
             } catch (e) {
-                console.error(e);
                 alert('建立失敗：' + e.message);
             }
         }
@@ -333,7 +326,6 @@
             });
         }
 
-        // 資料連動
         document.getElementById('edit-shopName').oninput = (e) => {
             database[currentId].shopName = e.target.value;
             document.getElementById('display-shop-name').innerText = e.target.value;
@@ -357,14 +349,14 @@
         }
 
         async function saveToGitHub(isSilent = false) {
-            const owner = document.getElementById('gh-owner').value || localStorage.getItem('gh-owner');
-            const repo = document.getElementById('gh-repo').value || localStorage.getItem('gh-repo');
-            const token = document.getElementById('gh-token').value || localStorage.getItem('gh-token');
+            const owner = document.getElementById('gh-owner').value.trim() || localStorage.getItem('gh-owner');
+            const repo = document.getElementById('gh-repo').value.trim() || localStorage.getItem('gh-repo');
+            const token = document.getElementById('gh-token').value.trim() || localStorage.getItem('gh-token');
             const btn = document.getElementById('save-btn');
 
             if (!owner || !repo || !token) {
                 if (!isSilent) {
-                    alert('請先在下方的 GitHub 設定中填寫串接資訊！');
+                    alert('請先在下方的 GitHub 設定中填寫串接資訊（帳號、專案名、Token）！');
                     toggleSettings();
                 }
                 return;
@@ -381,9 +373,13 @@
                     headers: { 'Authorization': `token ${token}`, 'Cache-Control': 'no-cache' } 
                 });
                 
-                if (!res.ok) throw new Error('無法取得 GitHub 檔案，請檢查 Repo 設定。');
-                const fileData = await res.json();
+                if (!res.ok) {
+                    if (res.status === 401) throw new Error('Token 無效或已過期 (401)。請重新產生 Token 並確保沒貼在公開地方。');
+                    if (res.status === 404) throw new Error(`找不到專案 (404)。請檢查帳號(${owner})與名稱(${repo})是否正確。`);
+                    throw new Error(`讀取失敗 (代碼: ${res.status})`);
+                }
                 
+                const fileData = await res.json();
                 const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(database, null, 2))));
                 
                 const putRes = await fetch(getUrl, {
@@ -399,10 +395,11 @@
                 if (putRes.ok) {
                     if (!isSilent) showStatus('✅ 更新成功！網頁大約 1 分鐘後生效。', 'var(--success)');
                 } else {
-                    throw new Error('儲存失敗，請確認 Token 權限。');
+                    if (putRes.status === 403) throw new Error('權限不足 (403)。請檢查 Token 是否有勾選 "repo" 權限。');
+                    throw new Error(`儲存失敗 (代碼: ${putRes.status})`);
                 }
             } catch (e) {
-                alert('GitHub 同步發生錯誤：' + e.message);
+                alert('錯誤：' + e.message);
                 throw e;
             } finally {
                 if (!isSilent) {
@@ -431,14 +428,13 @@
             document.getElementById('gh-token').value = localStorage.getItem('gh-token') || '';
         }
         function saveConfig() {
-            localStorage.setItem('gh-owner', document.getElementById('gh-owner').value);
-            localStorage.setItem('gh-repo', document.getElementById('gh-repo').value);
-            localStorage.setItem('gh-token', document.getElementById('gh-token').value);
+            localStorage.setItem('gh-owner', document.getElementById('gh-owner').value.trim());
+            localStorage.setItem('gh-repo', document.getElementById('gh-repo').value.trim());
+            localStorage.setItem('gh-token', document.getElementById('gh-token').value.trim());
             alert('設定已儲存！');
             toggleSettings();
         }
 
-        // 初始化檢查是否已在 localStorage 有 Token，有的話自動載入
         loadConfig();
     </script>
 </body>
