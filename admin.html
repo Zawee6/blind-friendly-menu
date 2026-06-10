@@ -180,6 +180,9 @@
                     <label>用餐規則 (每行一條)</label>
                     <textarea id="edit-rules" placeholder="例如：用餐時間限時 90 分鐘"></textarea>
                 </div>
+                <div style="margin-top: 1.5rem; border-top: 1px solid #eee; padding-top: 1rem; text-align: right;">
+                    <button class="btn btn-outline" style="color:var(--danger); border-color:var(--danger); font-size: 0.9rem;" onclick="deleteShop()">🗑️ 刪除此餐廳資料</button>
+                </div>
             </div>
 
             <div class="card">
@@ -345,6 +348,31 @@
             if (confirm("確定要刪除整個分類嗎？")) {
                 database[currentId].menus.splice(idx, 1);
                 renderMenus(database[currentId].menus);
+            }
+        }
+
+        async function deleteShop() {
+            const shopName = database[currentId].shopName;
+            if (!confirm(`⚠️ 警告：確定要永久刪除「${shopName}」的所有菜單資料嗎？\n此動作提交後將無法復原！`)) return;
+
+            const btn = event.target;
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerText = '⌛ 正在刪除...';
+
+            try {
+                // 從資料庫中移除
+                delete database[currentId];
+                
+                // 同步到 GitHub
+                await saveToGitHub(true); // 使用靜默模式儲存
+                
+                alert(`「${shopName}」已成功刪除！`);
+                location.reload(); // 重新整理回到登入頁面
+            } catch (e) {
+                alert('刪除失敗：' + e.message);
+                btn.disabled = false;
+                btn.innerText = originalText;
             }
         }
 
