@@ -33,7 +33,7 @@
             border-radius: 12px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
             width: 100%;
-            max-width: 350px;
+            max-width: 380px;
             text-align: center;
         }
         
@@ -46,6 +46,9 @@
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
         
         .container {
@@ -102,7 +105,6 @@
             margin-bottom: 1rem;
         }
         
-        /* GitHub 設定 (可隱藏) */
         #github-settings {
             display: none;
             background: #f8f9fa;
@@ -123,6 +125,8 @@
             z-index: 1000;
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
+
+        .helper-text { font-size: 0.85rem; color: #666; margin-top: 0.5rem; }
     </style>
 </head>
 <body>
@@ -130,22 +134,38 @@
     <!-- 登入畫面 -->
     <div id="login-screen">
         <div class="login-card">
-            <h2 style="margin-top:0">店家登入</h2>
-            <p style="color:#666; font-size:0.9rem">請輸入您的店家代號以進行編輯</p>
-            <input type="text" id="login-id" placeholder="代號 (例如: 001)" style="text-align:center; font-size:1.2rem; letter-spacing:2px">
-            <button class="btn btn-primary" style="width:100%; margin-top:1.5rem" onclick="login()">進入管理後台</button>
-            <p id="login-error" style="color:var(--danger); display:none; margin-top:1rem; font-size:0.9rem">代號錯誤，請重新輸入</p>
+            <h2 id="login-title" style="margin-top:0">店家登入</h2>
+            <p id="login-subtitle" style="color:#666; font-size:0.9rem">請輸入您的店家代號以進行編輯</p>
+            
+            <div id="login-form">
+                <input type="text" id="login-id" placeholder="代號 (如: 001)" style="text-align:center; font-size:1.2rem; letter-spacing:2px">
+                <button class="btn btn-primary" style="width:100%; margin-top:1.5rem" onclick="login()">進入管理後台</button>
+                <div class="helper-text">
+                    還沒有代號？ <a href="javascript:void(0)" onclick="showRegister()">建立新餐廳資料</a>
+                </div>
+            </div>
+
+            <div id="register-form" style="display:none">
+                <input type="text" id="reg-name" placeholder="請輸入新餐廳名稱" style="font-size:1.1rem; margin-bottom:1rem">
+                <button class="btn btn-success" style="width:100%; margin-top:0" onclick="register()">建立並自動登入</button>
+                <div class="helper-text">
+                    已有代號？ <a href="javascript:void(0)" onclick="showLogin()">返回登入</a>
+                </div>
+            </div>
+
+            <p id="login-error" style="color:var(--danger); display:none; margin-top:1rem; font-size:0.9rem"></p>
         </div>
     </div>
 
     <!-- 主程式 -->
     <div id="main-app">
         <header>
-            <div style="font-weight:bold; font-size:1.2rem; color:var(--dark)">
+            <div style="font-weight:bold; font-size:1.1rem; color:var(--dark)">
                 🏠 <span id="display-shop-name">載入中...</span>
+                <span id="display-shop-id" style="font-size:0.8rem; background:#eee; padding:2px 6px; border-radius:4px; margin-left:5px"></span>
             </div>
             <div>
-                <button class="btn btn-outline btn-small" onclick="location.reload()">登出</button>
+                <button class="btn btn-outline" style="padding: 0.5rem 1rem" onclick="location.reload()">登出</button>
             </div>
         </header>
 
@@ -168,7 +188,7 @@
                 <button class="btn btn-outline" style="width:100%" onclick="addCategory()">＋ 新增菜單分類</button>
             </div>
 
-            <div style="margin-top: 3rem; text-align: center;">
+            <div style="margin-top: 3rem; text-align: center; margin-bottom: 5rem;">
                 <button class="btn btn-success" id="save-btn" onclick="saveToGitHub()">🚀 儲存變更並更新網站</button>
                 
                 <p style="margin-top: 2rem;">
@@ -188,7 +208,7 @@
                         <label>Access Token (PAT)</label>
                         <input type="password" id="gh-token">
                     </div>
-                    <button class="btn btn-primary btn-small" onclick="saveConfig()">儲存設定</button>
+                    <button class="btn btn-primary btn-small" onclick="saveConfig()">儲存設定到此電腦</button>
                 </div>
             </div>
         </div>
@@ -200,27 +220,83 @@
         let database = {};
         let currentId = null;
 
+        function showRegister() {
+            document.getElementById('login-title').innerText = '建立新餐廳';
+            document.getElementById('login-subtitle').innerText = '填寫名稱後將自動為您生成代號';
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('register-form').style.display = 'block';
+            document.getElementById('login-error').style.display = 'none';
+        }
+
+        function showLogin() {
+            document.getElementById('login-title').innerText = '店家登入';
+            document.getElementById('login-subtitle').innerText = '請輸入您的店家代號以進行編輯';
+            document.getElementById('login-form').style.display = 'block';
+            document.getElementById('register-form').style.display = 'none';
+            document.getElementById('login-error').style.display = 'none';
+        }
+
+        async function fetchDatabase() {
+            const response = await fetch('database.json?t=' + Date.now());
+            database = await response.json();
+        }
+
         async function login() {
             const id = document.getElementById('login-id').value.trim();
-            const btn = document.querySelector('#login-screen .btn');
-            btn.disabled = true;
-            btn.innerText = '驗證中...';
+            const errorMsg = document.getElementById('login-error');
+            if (!id) return;
 
             try {
-                const response = await fetch('database.json?t=' + Date.now());
-                database = await response.json();
-                
+                await fetchDatabase();
                 if (database[id]) {
                     currentId = id;
                     showApp();
                 } else {
-                    document.getElementById('login-error').style.display = 'block';
+                    errorMsg.innerText = '找不到此代號，請檢查輸入或建立新餐廳。';
+                    errorMsg.style.display = 'block';
                 }
             } catch (e) {
-                alert('無法連線到資料庫，請檢查網路。');
-            } finally {
-                btn.disabled = false;
-                btn.innerText = '進入管理後台';
+                alert('載入資料失敗，請確認網路連線。');
+            }
+        }
+
+        async function register() {
+            const name = document.getElementById('reg-name').value.trim();
+            if (!name) { alert('請輸入餐廳名稱'); return; }
+
+            try {
+                await fetchDatabase();
+                
+                // 生成下一個代號
+                const ids = Object.keys(database).map(id => parseInt(id)).filter(id => !isNaN(id));
+                const nextId = String((Math.max(...ids, 0) + 1)).padStart(3, '0');
+                
+                // 建立基礎資料
+                database[nextId] = {
+                    shopName: name,
+                    rules: [],
+                    menus: [{ category: "預設分類", items: [] }]
+                };
+                
+                currentId = nextId;
+                
+                // 注意：註冊新店家必須要有 GitHub Token 才能將新資料寫回檔案
+                const token = localStorage.getItem('gh-token');
+                if (!token) {
+                    alert(`代號生成成功：${nextId}\n\n但您尚未設定 GitHub 權限，請先登入現有店家進行設定，或請管理員幫您處理。`);
+                    showLogin();
+                    document.getElementById('login-id').value = nextId;
+                    return;
+                }
+
+                // 直接嘗試儲存到 GitHub 並登入
+                alert(`即將為您建立代號：${nextId}\n店名：${name}\n\n按下確定後將嘗試同步到 GitHub...`);
+                await saveToGitHub(true); // 傳入 true 表示這是註冊後的首次自動儲存
+                showApp();
+
+            } catch (e) {
+                console.error(e);
+                alert('建立失敗：' + e.message);
             }
         }
 
@@ -230,16 +306,13 @@
             
             const shop = database[currentId];
             document.getElementById('display-shop-name').innerText = shop.shopName;
+            document.getElementById('display-shop-id').innerText = `ID: ${currentId}`;
             document.getElementById('edit-shopName').value = shop.shopName;
             document.getElementById('edit-rules').value = (shop.rules || []).join('\n');
             
             loadConfig();
             renderMenus(shop.menus || []);
-        }
-
-        function toggleSettings() {
-            const s = document.getElementById('github-settings');
-            s.style.display = s.style.display === 'block' ? 'none' : 'block';
+            window.scrollTo(0, 0);
         }
 
         function renderMenus(menus) {
@@ -250,17 +323,17 @@
                 sec.className = 'menu-section';
                 sec.innerHTML = `
                     <div class="menu-header">
-                        <input type="text" value="${m.category}" placeholder="分類名稱 (如：經典鍋物)" onchange="updateCategory(${idx}, this.value)">
-                        <button class="btn btn-outline" style="color:var(--danger)" onclick="removeCategory(${idx})">刪除</button>
+                        <input type="text" value="${m.category}" placeholder="分類名稱" onchange="updateCategory(${idx}, this.value)">
+                        <button class="btn btn-outline" style="color:var(--danger); padding: 0.5rem" onclick="removeCategory(${idx})">刪除</button>
                     </div>
-                    <label>品項內容 (格式：品項名稱 (價格元))</label>
+                    <label>品項內容 (品項名稱 (價格元))</label>
                     <textarea onchange="updateItems(${idx}, this.value)" placeholder="原味鍋 (170元)\n沙茶鍋 (180元)">${(m.items || []).join('\n')}</textarea>
                 `;
                 container.appendChild(sec);
             });
         }
 
-        // 資料同步
+        // 資料連動
         document.getElementById('edit-shopName').oninput = (e) => {
             database[currentId].shopName = e.target.value;
             document.getElementById('display-shop-name').innerText = e.target.value;
@@ -283,25 +356,32 @@
             }
         }
 
-        // GitHub 儲存邏輯
-        async function saveToGitHub() {
-            const owner = document.getElementById('gh-owner').value;
-            const repo = document.getElementById('gh-repo').value;
-            const token = document.getElementById('gh-token').value;
+        async function saveToGitHub(isSilent = false) {
+            const owner = document.getElementById('gh-owner').value || localStorage.getItem('gh-owner');
+            const repo = document.getElementById('gh-repo').value || localStorage.getItem('gh-repo');
+            const token = document.getElementById('gh-token').value || localStorage.getItem('gh-token');
             const btn = document.getElementById('save-btn');
 
             if (!owner || !repo || !token) {
-                alert('請先在下方的 GitHub 設定中填寫串接資訊！');
-                toggleSettings();
+                if (!isSilent) {
+                    alert('請先在下方的 GitHub 設定中填寫串接資訊！');
+                    toggleSettings();
+                }
                 return;
             }
 
-            btn.disabled = true;
-            btn.innerText = '⌛ 正在更新網站...';
+            if (!isSilent) {
+                btn.disabled = true;
+                btn.innerText = '⌛ 正在更新網站...';
+            }
 
             try {
                 const getUrl = `https://api.github.com/repos/${owner}/${repo}/contents/database.json`;
-                const res = await fetch(getUrl, { headers: { 'Authorization': `token ${token}` } });
+                const res = await fetch(getUrl, { 
+                    headers: { 'Authorization': `token ${token}`, 'Cache-Control': 'no-cache' } 
+                });
+                
+                if (!res.ok) throw new Error('無法取得 GitHub 檔案，請檢查 Repo 設定。');
                 const fileData = await res.json();
                 
                 const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(database, null, 2))));
@@ -310,22 +390,25 @@
                     method: 'PUT',
                     headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        message: `店家 ${currentId} 更新了菜單`,
+                        message: `店家 ${currentId} 更新資料`,
                         content: encoded,
                         sha: fileData.sha
                     })
                 });
 
                 if (putRes.ok) {
-                    showStatus('✅ 更新成功！大約 1 分鐘後正式網頁會生效。', 'var(--success)');
+                    if (!isSilent) showStatus('✅ 更新成功！網頁大約 1 分鐘後生效。', 'var(--success)');
                 } else {
-                    throw new Error('儲存失敗');
+                    throw new Error('儲存失敗，請確認 Token 權限。');
                 }
             } catch (e) {
-                alert('錯誤：' + e.message);
+                alert('GitHub 同步發生錯誤：' + e.message);
+                throw e;
             } finally {
-                btn.disabled = false;
-                btn.innerText = '🚀 儲存變更並更新網站';
+                if (!isSilent) {
+                    btn.disabled = false;
+                    btn.innerText = '🚀 儲存變更並更新網站';
+                }
             }
         }
 
@@ -335,6 +418,11 @@
             s.style.backgroundColor = color;
             s.style.display = 'block';
             setTimeout(() => s.style.display = 'none', 5000);
+        }
+
+        function toggleSettings() {
+            const s = document.getElementById('github-settings');
+            s.style.display = s.style.display === 'block' ? 'none' : 'block';
         }
 
         function loadConfig() {
@@ -349,6 +437,9 @@
             alert('設定已儲存！');
             toggleSettings();
         }
+
+        // 初始化檢查是否已在 localStorage 有 Token，有的話自動載入
+        loadConfig();
     </script>
 </body>
 </html>
