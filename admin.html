@@ -369,10 +369,11 @@
 
             try {
                 const getUrl = `https://api.github.com/repos/${owner}/${repo}/contents/database.json`;
+                // 1. 取得檔案 SHA
                 const res = await fetch(getUrl, { 
-                    headers: { 'Authorization': `token ${token}`, 'Cache-Control': 'no-cache' } 
+                    headers: { 'Authorization': `token ${token}` } 
                 });
-                
+
                 if (!res.ok) {
                     if (res.status === 401) throw new Error('Token 無效或已過期 (401)。請重新產生 Token 並確保沒貼在公開地方。');
                     if (res.status === 404) throw new Error(`找不到專案 (404)。請檢查帳號(${owner})與名稱(${repo})是否正確。`);
