@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>菜單後台管理 - 視障友善菜單</title>
+    <style>
+        :root {
+            --primary: #2196f3;
+            --secondary: #e67e22;
+            --danger: #c0392b;
+            --bg: #f5f6fa;
+            --card: #ffffff;
+            --text: #2f3640;
+        }
+        body {
+            font-family: -apple-system, system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            height: 100vh;
+        }
+        /* 左側導覽 */
+        .sidebar {
+            width: 300px;
+            background: var(--card);
+            border-right: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+        }
+        .sidebar h2 { margin-top: 0; font-size: 1.2rem; border-bottom: 2px solid var(--primary); padding-bottom: 0.5rem; }
+        .shop-list {
+            flex: 1;
+            overflow-y: auto;
+            margin: 1rem 0;
+        }
+        .shop-item {
+            padding: 0.8rem;
+            margin-bottom: 0.5rem;
+            background: #eee;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .shop-item:hover { background: #e0e0e0; }
+        .shop-item.active { background: var(--primary); color: white; }
+        .shop-item .id { font-size: 0.8rem; opacity: 0.7; }
+
+        /* 右側主編輯區 */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+        .card {
+            background: var(--card);
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; font-weight: bold; margin-bottom: 0.5rem; }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+        textarea { height: 100px; }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+        .btn:hover { opacity: 0.8; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-secondary { background: var(--secondary); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-small { padding: 0.3rem 0.6rem; font-size: 0.8rem; }
+
+        .menu-section {
+            border: 1px solid #eee;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+            position: relative;
+        }
+        .menu-section-header {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1rem;
+            align-items: center;
+        }
+        .actions {
+            margin-top: 2rem;
+            display: flex;
+            gap: 10px;
+        }
+        
+        #json-output {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #2c3e50;
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>餐廳清單</h2>
+        <div class="shop-list" id="shop-list"></div>
+        <button class="btn btn-primary" onclick="addNewShop()">＋ 新增餐廳</button>
+        <div style="margin-top: 1rem; font-size: 0.8rem; color: #666;">
+            注意：修改後需點擊「下載 JSON」並覆蓋檔案。
+        </div>
+        <button class="btn btn-secondary" style="margin-top: 1rem;" onclick="exportJSON()">💾 下載最新 JSON</button>
+    </div>
+
+    <div class="main-content">
+        <div id="editor" style="display:none;">
+            <div class="card">
+                <h2>基本資訊 (ID: <span id="edit-id"></span>)</h2>
+                <div class="form-group">
+                    <label>店名</label>
+                    <input type="text" id="edit-shopName" placeholder="例如：鍋序火鍋">
+                </div>
+                <div class="form-group">
+                    <label>用餐規則 (每行一條)</label>
+                    <textarea id="edit-rules" placeholder="例如：用餐時間限時 90 分鐘"></textarea>
+                </div>
+                <button class="btn btn-danger" onclick="deleteShop()">刪除此餐廳</button>
+            </div>
+
+            <div class="card">
+                <h2>菜單內容</h2>
+                <div id="menus-container"></div>
+                <button class="btn btn-primary" onclick="addCategory()">＋ 新增分類</button>
+            </div>
+        </div>
+        
+        <div id="welcome-msg" style="text-align:center; margin-top: 100px; color: #999;">
+            <h1>歡迎使用管理後台</h1>
+            <p>請點擊左側餐廳進行編輯，或新增一家餐廳。</p>
+        </div>
+    </div>
+
+    <script>
+        let database = {};
+        let currentId = null;
+
+        async function init() {
+            try {
+                const response = await fetch('database.json');
+                database = await response.json();
+                renderShopList();
+            } catch (e) {
+                console.error("載入失敗", e);
+                alert("無法載入 database.json，請確認檔案存在。");
+            }
+        }
+
+        function renderShopList() {
+            const list = document.getElementById('shop-list');
+            list.innerHTML = '';
+            Object.keys(database).sort().forEach(id => {
+                const item = document.createElement('div');
+                item.className = `shop-item ${id === currentId ? 'active' : ''}`;
+                item.innerHTML = `
+                    <span>${database[id].shopName || '未命名'}</span>
+                    <span class="id">${id}</span>
+                `;
+                item.onclick = () => loadShop(id);
+                list.appendChild(item);
+            });
+        }
+
+        function loadShop(id) {
+            currentId = id;
+            const shop = database[id];
+            document.getElementById('editor').style.display = 'block';
+            document.getElementById('welcome-msg').style.display = 'none';
+            document.getElementById('edit-id').innerText = id;
+            document.getElementById('edit-shopName').value = shop.shopName;
+            document.getElementById('edit-rules').value = (shop.rules || []).join('\n');
+            
+            renderMenus(shop.menus || []);
+            renderShopList();
+        }
+
+        function renderMenus(menus) {
+            const container = document.getElementById('menus-container');
+            container.innerHTML = '';
+            menus.forEach((m, idx) => {
+                const sec = document.createElement('div');
+                sec.className = 'menu-section';
+                sec.innerHTML = `
+                    <div class="menu-section-header">
+                        <input type="text" value="${m.category}" placeholder="分類名稱" onchange="updateCategory(${idx}, this.value)">
+                        <button class="btn btn-danger btn-small" onclick="removeCategory(${idx})">刪除分類</button>
+                    </div>
+                    <label>品項 (格式：品項名稱 (價格元)，每行一個)</label>
+                    <textarea onchange="updateItems(${idx}, this.value)" placeholder="例如：原味鍋 (170元)">${(m.items || []).join('\n')}</textarea>
+                `;
+                container.appendChild(sec);
+            });
+        }
+
+        // 資料更新邏輯
+        document.getElementById('edit-shopName').oninput = (e) => {
+            if (currentId) database[currentId].shopName = e.target.value;
+            renderShopList();
+        };
+
+        document.getElementById('edit-rules').oninput = (e) => {
+            if (currentId) database[currentId].rules = e.target.value.split('\n').filter(r => r.trim());
+        };
+
+        function updateCategory(idx, val) {
+            database[currentId].menus[idx].category = val;
+        }
+
+        function updateItems(idx, val) {
+            database[currentId].menus[idx].items = val.split('\n').filter(i => i.trim());
+        }
+
+        function addCategory() {
+            if (!database[currentId].menus) database[currentId].menus = [];
+            database[currentId].menus.push({ category: "新分類", items: [] });
+            renderMenus(database[currentId].menus);
+        }
+
+        function removeCategory(idx) {
+            if (confirm("確定要刪除此分類嗎？")) {
+                database[currentId].menus.splice(idx, 1);
+                renderMenus(database[currentId].menus);
+            }
+        }
+
+        function addNewShop() {
+            const ids = Object.keys(database).map(id => parseInt(id)).sort((a,b) => b-a);
+            const nextId = String((ids[0] || 0) + 1).padStart(3, '0');
+            database[nextId] = {
+                shopName: "新餐廳",
+                rules: [],
+                menus: [{ category: "預設分類", items: [] }]
+            };
+            loadShop(nextId);
+        }
+
+        function deleteShop() {
+            if (confirm(`確定要刪除 ${database[currentId].shopName} 嗎？此動作無法復原。`)) {
+                delete database[currentId];
+                currentId = null;
+                document.getElementById('editor').style.display = 'none';
+                document.getElementById('welcome-msg').style.display = 'block';
+                renderShopList();
+            }
+        }
+
+        function exportJSON() {
+            const dataStr = JSON.stringify(database, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = 'database.json';
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            alert("已產生新的 database.json，請將它覆蓋掉專案中的舊檔案！");
+        }
+
+        init();
+    </script>
+</body>
+</html>
