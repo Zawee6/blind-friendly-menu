@@ -90,7 +90,7 @@
         .btn-success { background: var(--success); color: white; width: 100%; margin-top: 1rem; }
         .btn-outline { background: transparent; border: 1px solid #ddd; color: #666; }
         .btn:hover { opacity: 0.9; transform: translateY(-1px); }
-        .btn:disabled { background: #ccc; cursor: not-allowed; }
+        .btn-danger { background: var(--danger); color: white; }
 
         .menu-section {
             border: 1px solid #eee;
@@ -135,19 +135,21 @@
     <div id="login-screen">
         <div class="login-card">
             <h2 id="login-title" style="margin-top:0">店家登入</h2>
-            <p id="login-subtitle" style="color:#666; font-size:0.9rem">請輸入您的店家代號以進行編輯</p>
+            <p id="login-subtitle" style="color:#666; font-size:0.9rem">請輸入代號與密碼進行編輯</p>
             
             <div id="login-form">
-                <input type="text" id="login-id" placeholder="代號 (如: 001)" style="text-align:center; font-size:1.2rem; letter-spacing:2px">
-                <button class="btn btn-primary" style="width:100%; margin-top:1.5rem" onclick="login()">進入管理後台</button>
+                <input type="text" id="login-id" placeholder="代號 (如: 001)" style="text-align:center; font-size:1.1rem; margin-bottom:10px">
+                <input type="password" id="login-pw" placeholder="請輸入密碼" style="text-align:center; font-size:1.1rem">
+                <button class="btn btn-primary" style="width:100%; margin-top:1.5rem" onclick="login()">驗證並進入後台</button>
                 <div class="helper-text">
                     還沒有代號？ <a href="javascript:void(0)" onclick="showRegister()">建立新餐廳資料</a>
                 </div>
             </div>
 
             <div id="register-form" style="display:none">
-                <input type="text" id="reg-name" placeholder="請輸入新餐廳名稱" style="font-size:1.1rem; margin-bottom:1rem">
-                <button class="btn btn-success" style="width:100%; margin-top:0" onclick="register()">建立並自動登入</button>
+                <input type="text" id="reg-name" placeholder="請輸入新餐廳名稱" style="font-size:1.1rem; margin-bottom:10px">
+                <input type="password" id="reg-pw" placeholder="設定管理密碼" style="font-size:1.1rem; margin-bottom:10px">
+                <button class="btn btn-success" style="width:100%; margin-top:0.5rem" onclick="register()">建立並自動登入</button>
                 <div class="helper-text">
                     已有代號？ <a href="javascript:void(0)" onclick="showLogin()">返回登入</a>
                 </div>
@@ -170,6 +172,7 @@
         </header>
 
         <div class="container">
+            <!-- 基本資訊區塊 -->
             <div class="card">
                 <h3>基本資訊</h3>
                 <div class="form-group">
@@ -177,25 +180,32 @@
                     <input type="text" id="edit-shopName">
                 </div>
                 <div class="form-group">
+                    <label>登入密碼</label>
+                    <input type="password" id="edit-password" placeholder="可用於後續登入">
+                    <p style="font-size:0.75rem; color:#999; margin-top:4px">建議設定密碼以保護您的資料不被他人修改。</p>
+                </div>
+                <div class="form-group">
                     <label>用餐規則 (每行一條)</label>
                     <textarea id="edit-rules" placeholder="例如：用餐時間限時 90 分鐘"></textarea>
                 </div>
                 <div style="margin-top: 1.5rem; border-top: 1px solid #eee; padding-top: 1rem; text-align: right;">
-                    <button class="btn btn-outline" style="color:var(--danger); border-color:var(--danger); font-size: 0.9rem;" onclick="deleteShop()">🗑️ 刪除此餐廳資料</button>
+                    <button class="btn btn-outline" style="color:var(--danger); border-color:var(--danger); font-size: 0.8rem;" onclick="deleteShop()">🗑️ 刪除此餐廳資料</button>
                 </div>
             </div>
 
+            <!-- 菜單區塊 -->
             <div class="card">
                 <h3>菜單分類</h3>
                 <div id="menus-container"></div>
                 <button class="btn btn-outline" style="width:100%" onclick="addCategory()">＋ 新增菜單分類</button>
             </div>
 
+            <!-- 儲存與設定區塊 -->
             <div style="margin-top: 3rem; text-align: center; margin-bottom: 5rem;">
                 <button class="btn btn-success" id="save-btn" onclick="saveToGitHub()">🚀 儲存變更並更新網站</button>
                 
                 <p style="margin-top: 2rem;">
-                    <a href="javascript:void(0)" onclick="toggleSettings()" style="color:#999; text-decoration:none; font-size:0.8rem">⚙️ GitHub 串接設定 (首次使用需填寫)</a>
+                    <a href="javascript:void(0)" onclick="toggleSettings()" style="color:#999; text-decoration:none; font-size:0.8rem">⚙️ GitHub 串接設定 (僅管理員需調整)</a>
                 </p>
                 
                 <div id="github-settings">
@@ -225,7 +235,7 @@
 
         function showRegister() {
             document.getElementById('login-title').innerText = '建立新餐廳';
-            document.getElementById('login-subtitle').innerText = '填寫名稱後將自動為您生成代號';
+            document.getElementById('login-subtitle').innerText = '設定店名與密碼後將為您生成代號';
             document.getElementById('login-form').style.display = 'none';
             document.getElementById('register-form').style.display = 'block';
             document.getElementById('login-error').style.display = 'none';
@@ -233,7 +243,7 @@
 
         function showLogin() {
             document.getElementById('login-title').innerText = '店家登入';
-            document.getElementById('login-subtitle').innerText = '請輸入您的店家代號以進行編輯';
+            document.getElementById('login-subtitle').innerText = '請輸入代號與密碼進行編輯';
             document.getElementById('login-form').style.display = 'block';
             document.getElementById('register-form').style.display = 'none';
             document.getElementById('login-error').style.display = 'none';
@@ -246,26 +256,37 @@
 
         async function login() {
             const id = document.getElementById('login-id').value.trim();
+            const pw = document.getElementById('login-pw').value.trim();
             const errorMsg = document.getElementById('login-error');
             if (!id) return;
 
             try {
                 await fetchDatabase();
-                if (database[id]) {
+                const shop = database[id];
+                
+                if (shop) {
+                    // 密碼檢查邏輯
+                    if (shop.password && shop.password !== pw) {
+                        errorMsg.innerText = '密碼錯誤，請重新輸入。';
+                        errorMsg.style.display = 'block';
+                        return;
+                    }
+                    
                     currentId = id;
                     showApp();
                 } else {
-                    errorMsg.innerText = '找不到此代號，請檢查輸入或建立新餐廳。';
+                    errorMsg.innerText = '找不到此代號，請檢查輸入。';
                     errorMsg.style.display = 'block';
                 }
             } catch (e) {
-                alert('載入資料失敗，請確認網路連線。');
+                alert('載入資料失敗：' + e.message);
             }
         }
 
         async function register() {
             const name = document.getElementById('reg-name').value.trim();
-            if (!name) { alert('請輸入餐廳名稱'); return; }
+            const pw = document.getElementById('reg-pw').value.trim();
+            if (!name || !pw) { alert('請填寫店名與密碼'); return; }
 
             try {
                 await fetchDatabase();
@@ -274,6 +295,7 @@
                 
                 database[nextId] = {
                     shopName: name,
+                    password: pw,
                     rules: [],
                     menus: [{ category: "預設分類", items: [] }]
                 };
@@ -281,13 +303,13 @@
                 currentId = nextId;
                 const token = localStorage.getItem('gh-token');
                 if (!token) {
-                    alert(`代號生成成功：${nextId}\n\n但您尚未設定 GitHub 權限，請先點擊下方的 GitHub 設定進行填寫，再嘗試儲存。`);
+                    alert(`建立成功！您的代號是：${nextId}\n\n請聯絡管理員協助完成 GitHub 串接設定。`);
                     showApp();
                     toggleSettings();
                     return;
                 }
 
-                alert(`即將為您建立代號：${nextId}\n店名：${name}\n\n按下確定後將嘗試同步到 GitHub...`);
+                alert(`建立成功！您的代號是：${nextId}\n\n按下確定後將嘗試同步到 GitHub...`);
                 await saveToGitHub(true);
                 showApp();
 
@@ -303,7 +325,8 @@
             const shop = database[currentId];
             document.getElementById('display-shop-name').innerText = shop.shopName;
             document.getElementById('display-shop-id').innerText = `ID: ${currentId}`;
-            document.getElementById('edit-shopName').value = shop.shopName;
+            document.getElementById('edit-shopName').value = shop.shopName || '';
+            document.getElementById('edit-password').value = shop.password || '';
             document.getElementById('edit-rules').value = (shop.rules || []).join('\n');
             
             loadConfig();
@@ -322,8 +345,8 @@
                         <input type="text" value="${m.category}" placeholder="分類名稱" onchange="updateCategory(${idx}, this.value)">
                         <button class="btn btn-outline" style="color:var(--danger); padding: 0.5rem" onclick="removeCategory(${idx})">刪除</button>
                     </div>
-                    <label>品項內容 (品項名稱 (價格元))</label>
-                    <textarea onchange="updateItems(${idx}, this.value)" placeholder="原味鍋 (170元)\n沙茶鍋 (180元)">${(m.items || []).join('\n')}</textarea>
+                    <label>品項內容 (品項名稱價格元)</label>
+                    <textarea onchange="updateItems(${idx}, this.value)" placeholder="原味鍋170元\n沙茶鍋180元">${(m.items || []).join('\n')}</textarea>
                 `;
                 container.appendChild(sec);
             });
@@ -333,11 +356,19 @@
             database[currentId].shopName = e.target.value;
             document.getElementById('display-shop-name').innerText = e.target.value;
         };
+        document.getElementById('edit-password').oninput = (e) => {
+            database[currentId].password = e.target.value;
+        };
         document.getElementById('edit-rules').oninput = (e) => {
             database[currentId].rules = e.target.value.split('\n').filter(r => r.trim());
         };
         function updateCategory(idx, val) { database[currentId].menus[idx].category = val; }
-        function updateItems(idx, val) { database[currentId].menus[idx].items = val.split('\n').filter(i => i.trim()); }
+        function updateItems(idx, val) { 
+            // 同時移除輸入內容中的括弧與空格
+            database[currentId].menus[idx].items = val.split('\n')
+                .filter(i => i.trim())
+                .map(i => i.replace(/[\(\)\s]/g, "")); 
+        }
         
         function addCategory() {
             if (!database[currentId].menus) database[currentId].menus = [];
@@ -353,26 +384,21 @@
 
         async function deleteShop() {
             const shopName = database[currentId].shopName;
-            if (!confirm(`⚠️ 警告：確定要永久刪除「${shopName}」的所有菜單資料嗎？\n此動作提交後將無法復原！`)) return;
+            if (!confirm(`⚠️ 警告：確定要永久刪除「${shopName}」嗎？\n此動作提交後將無法復原！`)) return;
 
             const btn = event.target;
-            const originalText = btn.innerText;
             btn.disabled = true;
             btn.innerText = '⌛ 正在刪除...';
 
             try {
-                // 從資料庫中移除
                 delete database[currentId];
-                
-                // 同步到 GitHub
-                await saveToGitHub(true); // 使用靜默模式儲存
-                
+                await saveToGitHub(true);
                 alert(`「${shopName}」已成功刪除！`);
-                location.reload(); // 重新整理回到登入頁面
+                location.reload();
             } catch (e) {
                 alert('刪除失敗：' + e.message);
                 btn.disabled = false;
-                btn.innerText = originalText;
+                btn.innerText = '🗑️ 刪除此餐廳資料';
             }
         }
 
@@ -384,7 +410,7 @@
 
             if (!owner || !repo || !token) {
                 if (!isSilent) {
-                    alert('請先在下方的 GitHub 設定中填寫串接資訊（帳號、專案名、Token）！');
+                    alert('請填寫 GitHub 設定資訊！');
                     toggleSettings();
                 }
                 return;
@@ -397,16 +423,9 @@
 
             try {
                 const getUrl = `https://api.github.com/repos/${owner}/${repo}/contents/database.json`;
-                // 1. 取得檔案 SHA
-                const res = await fetch(getUrl, { 
-                    headers: { 'Authorization': `token ${token}` } 
-                });
+                const res = await fetch(getUrl, { headers: { 'Authorization': `token ${token}` } });
 
-                if (!res.ok) {
-                    if (res.status === 401) throw new Error('Token 無效或已過期 (401)。請重新產生 Token 並確保沒貼在公開地方。');
-                    if (res.status === 404) throw new Error(`找不到專案 (404)。請檢查帳號(${owner})與名稱(${repo})是否正確。`);
-                    throw new Error(`讀取失敗 (代碼: ${res.status})`);
-                }
+                if (!res.ok) throw new Error('讀取失敗 (代碼: ' + res.status + ')');
                 
                 const fileData = await res.json();
                 const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(database, null, 2))));
@@ -424,11 +443,10 @@
                 if (putRes.ok) {
                     if (!isSilent) showStatus('✅ 更新成功！網頁大約 1 分鐘後生效。', 'var(--success)');
                 } else {
-                    if (putRes.status === 403) throw new Error('權限不足 (403)。請檢查 Token 是否有勾選 "repo" 權限。');
-                    throw new Error(`儲存失敗 (代碼: ${putRes.status})`);
+                    throw new Error('儲存失敗 (代碼: ' + putRes.status + ')');
                 }
             } catch (e) {
-                alert('錯誤：' + e.message);
+                alert('GitHub 同步發生錯誤：' + e.message);
                 throw e;
             } finally {
                 if (!isSilent) {
