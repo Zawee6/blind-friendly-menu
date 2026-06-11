@@ -1160,11 +1160,15 @@
   "014": {
     "shopName": "康乃爾",
     "password": "0000",
-    "rules": [],
+    "rules": [
+      "用餐時間無限"
+    ],
     "menus": [
       {
-        "category": "預設分類",
-        "items": []
+        "category": "必殺餐",
+        "items": [
+          "必殺三明治200元"
+        ]
       }
     ]
   }
